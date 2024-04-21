@@ -31,7 +31,7 @@ export class AuthService {
 
     return {
       token,
-      createdUser,
+      user: createdUser,
     };
   }
 
@@ -67,7 +67,7 @@ export class AuthService {
         id,
       });
 
-      return userData;
+      return { user: userData };
     } catch (error) {
       throw new UnauthorizedException();
     }

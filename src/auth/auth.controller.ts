@@ -42,7 +42,7 @@ export class AuthController {
     reply.clearCookie(COOKIE.JWT);
 
     return {
-      message: 'success',
+      success: true,
     };
   }
 }

@@ -1,12 +1,9 @@
-import type {
-  UserProfile,
-  ChangableUserProfileProperties,
-} from '../users.interface';
+import type { ChangableUserProfileProperties } from '../users.interface';
 
 export type CreateUserDto = {
   email: string;
   password: string;
-  profile?: Pick<UserProfile, 'userName'>;
+  userName?: string;
 };
 
 export type UpdateUserDto = {

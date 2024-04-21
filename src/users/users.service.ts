@@ -10,7 +10,11 @@ import type { User } from './users.interface';
 export class UsersService {
   public constructor(private readonly db: PrismaClient) {}
 
-  async create({ email, password, profile }: CreateUserDto): Promise<User> {
+  async create({
+    email,
+    password,
+    userName: name,
+  }: CreateUserDto): Promise<User> {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const createdUser = await this.db.user.create({
@@ -24,7 +28,7 @@ export class UsersService {
       },
     });
 
-    const userName = profile?.userName ?? `User${createdUser.id}`;
+    const userName = name ?? `User${createdUser.id}`;
     const createdUserProfile = await this.db.userProfile.create({
       data: {
         userName,
