@@ -1,55 +1,71 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 
+import { JwtTokenService } from './services/jwt-token.service';
 import { COOKIE } from './auth.constant';
 
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { LoginUserDto, RegisterUserDto } from './dto/auth.dto';
-import type { DataToEncode, DecodedData } from './auth.interface';
+import type { DataToEncode } from './auth.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtTokenService,
   ) {}
 
   async registerUser(registerUserDto: RegisterUserDto, reply: FastifyReply) {
-    const { passwordHash, ...createdUser } =
+    const emailAlreadyExists = this.usersService.findBy({
+      email: registerUserDto.email,
+    });
+
+    if (emailAlreadyExists) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const { passwordHash, ...user } =
       await this.usersService.create(registerUserDto);
 
-    const dataToEncode: DataToEncode = { id: createdUser.id };
-    const token = await this.jwtService.signAsync(dataToEncode);
+    const dataToEncode: DataToEncode = { id: user.id };
+    const { accessToken, refreshToken } =
+      await this.jwtService.generateTokens(dataToEncode);
 
-    reply.cookie(COOKIE.JWT, token, { httpOnly: true });
+    reply.cookie(COOKIE.JWT, refreshToken, { httpOnly: true });
 
     return {
-      token,
-      user: createdUser,
+      token: accessToken,
+      user,
     };
   }
 
   async loginUser({ email, password }: LoginUserDto, reply: FastifyReply) {
     const { passwordHash, ...user } = await this.usersService.findBy({ email });
+
+    if (!user) {
+      throw new BadRequestException('user not found');
+    }
+
     const passwordMismatch = !(await bcrypt.compare(password, passwordHash));
 
-    if (!user || passwordMismatch) {
+    if (passwordMismatch) {
       throw new BadRequestException('invalid credentials');
     }
 
     const dataToEncode: DataToEncode = { id: user.id };
-    const token = await this.jwtService.signAsync(dataToEncode);
+    const { accessToken, refreshToken } =
+      await this.jwtService.generateTokens(dataToEncode);
 
-    reply.cookie(COOKIE.JWT, token, { httpOnly: true });
+    reply.cookie(COOKIE.JWT, refreshToken, { httpOnly: true });
 
     return {
-      token,
+      token: accessToken,
       user,
     };
   }
@@ -57,17 +73,17 @@ export class AuthService {
   async getUser(request: FastifyRequest) {
     try {
       const cookie = request.cookies[COOKIE.JWT];
-      const { id } = await this.jwtService.verifyAsync<DecodedData>(cookie);
+      const { id } = await this.jwtService.verifyToken(cookie);
 
       if (!id) {
         throw new UnauthorizedException();
       }
 
-      const { passwordHash, ...userData } = await this.usersService.findBy({
+      const { passwordHash, ...user } = await this.usersService.findBy({
         id,
       });
 
-      return { user: userData };
+      return { user };
     } catch (error) {
       throw new UnauthorizedException();
     }

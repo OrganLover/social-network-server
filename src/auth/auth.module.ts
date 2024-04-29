@@ -5,17 +5,11 @@ import { UsersService } from 'src/users/users.service';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { JwtTokenService } from './services/jwt-token.service';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, UsersService, PrismaClient],
-  imports: [
-    JwtModule.register({
-      secret: 'secretFKey',
-      signOptions: {
-        expiresIn: '1d',
-      },
-    }),
-  ],
+  providers: [AuthService, UsersService, PrismaClient, JwtTokenService],
+  imports: [JwtModule.register({ global: true })],
 })
 export class AuthModule {}
