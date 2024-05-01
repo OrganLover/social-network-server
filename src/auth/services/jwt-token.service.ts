@@ -21,6 +21,8 @@ export class JwtTokenService {
   }
 
   public async verifyToken(token: string): Promise<DecodedData> {
-    return this.jwtService.verifyAsync(token);
+    return await this.jwtService.verifyAsync(token, {
+      secret: process.env.REFRESH_TOKEN_SECRET,
+    });
   }
 }

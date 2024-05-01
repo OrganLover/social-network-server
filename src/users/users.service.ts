@@ -47,17 +47,21 @@ export class UsersService {
 
     switch (key) {
       case 'id': {
-        return await this.db.user.findUniqueOrThrow({
-          where: { id: property.id },
-          include: { profile: true },
-        });
+        return (
+          (await this.db.user.findUnique({
+            where: { id: property.id },
+            include: { profile: true },
+          })) ?? undefined
+        );
       }
 
       case 'email': {
-        return await this.db.user.findUniqueOrThrow({
-          where: { email: property.email },
-          include: { profile: true },
-        });
+        return (
+          (await this.db.user.findUnique({
+            where: { email: property.email },
+            include: { profile: true },
+          })) ?? undefined
+        );
       }
     }
   }

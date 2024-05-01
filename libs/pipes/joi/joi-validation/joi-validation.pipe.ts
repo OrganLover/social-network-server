@@ -14,7 +14,8 @@ export default class JoiValidationPipe implements PipeTransform {
     } catch (error) {
       throw new BadRequestException(undefined, {
         cause: error,
-        description: error?.message ?? ERROR_MESSAGE.VALIDATION_ERROR,
+        description:
+          (error as Error)?.message ?? ERROR_MESSAGE.VALIDATION_ERROR,
       });
     }
   }

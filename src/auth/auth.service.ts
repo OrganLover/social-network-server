@@ -22,12 +22,14 @@ export class AuthService {
   ) {}
 
   async registerUser(registerUserDto: RegisterUserDto, reply: FastifyReply) {
-    const emailAlreadyExists = this.usersService.findBy({
+    const emailAlreadyExists = await this.usersService.findBy({
       email: registerUserDto.email,
     });
 
     if (emailAlreadyExists) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Email already exists', {
+        description: 'auth.email-already-exists',
+      });
     }
 
     const { passwordHash, ...user } =
@@ -46,16 +48,21 @@ export class AuthService {
   }
 
   async loginUser({ email, password }: LoginUserDto, reply: FastifyReply) {
-    const { passwordHash, ...user } = await this.usersService.findBy({ email });
+    const userData = await this.usersService.findBy({ email });
 
-    if (!user) {
-      throw new BadRequestException('user not found');
+    if (!userData) {
+      throw new BadRequestException('user not found', {
+        description: 'auth.invalid-credentials',
+      });
     }
 
+    const { passwordHash, ...user } = userData;
     const passwordMismatch = !(await bcrypt.compare(password, passwordHash));
 
     if (passwordMismatch) {
-      throw new BadRequestException('invalid credentials');
+      throw new BadRequestException('invalid credentials', {
+        description: 'auth.invalid-credentials',
+      });
     }
 
     const dataToEncode: DataToEncode = { id: user.id };
@@ -73,19 +80,31 @@ export class AuthService {
   async getUser(request: FastifyRequest) {
     try {
       const cookie = request.cookies[COOKIE.JWT];
-      const { id } = await this.jwtService.verifyToken(cookie);
 
-      if (!id) {
-        throw new UnauthorizedException();
+      if (!cookie) {
+        throw new UnauthorizedException('unauthorized', {
+          description: 'unauthorized',
+        });
       }
 
-      const { passwordHash, ...user } = await this.usersService.findBy({
+      const { id } = await this.jwtService.verifyToken(cookie);
+      const userData = await this.usersService.findBy({
         id,
       });
 
+      if (!userData) {
+        throw new UnauthorizedException('unauthorized', {
+          description: 'unauthorized',
+        });
+      }
+
+      const { passwordHash, ...user } = userData;
+
       return { user };
     } catch (error) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('unauthorized', {
+        description: 'unauthorized',
+      });
     }
   }
 }
