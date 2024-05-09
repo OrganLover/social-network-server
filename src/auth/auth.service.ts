@@ -39,7 +39,7 @@ export class AuthService {
     const { accessToken, refreshToken } =
       await this.jwtService.generateTokens(dataToEncode);
 
-    reply.cookie(COOKIE.JWT, refreshToken, { httpOnly: true });
+    reply.setCookie(COOKIE.JWT, refreshToken);
 
     return {
       token: accessToken,
@@ -69,7 +69,7 @@ export class AuthService {
     const { accessToken, refreshToken } =
       await this.jwtService.generateTokens(dataToEncode);
 
-    reply.cookie(COOKIE.JWT, refreshToken, { httpOnly: true });
+    reply.setCookie(COOKIE.JWT, refreshToken);
 
     return {
       token: accessToken,

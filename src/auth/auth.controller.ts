@@ -39,7 +39,7 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res({ passthrough: true }) reply: FastifyReply) {
-    reply.clearCookie(COOKIE.JWT);
+    reply.setCookie(COOKIE.JWT, '');
 
     return {
       success: true,
