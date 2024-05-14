@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
+import { COOKIE } from 'src/app.constant';
+import { DecodedAuthCookieData } from 'src/app.interface';
 
 import { JwtTokenService } from './services/jwt-token.service';
-import { COOKIE } from './auth.constant';
 
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { LoginUserDto, RegisterUserDto } from './dto/auth.dto';
-import type { DataToEncode } from './auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +35,7 @@ export class AuthService {
     const { passwordHash, ...user } =
       await this.usersService.create(registerUserDto);
 
-    const dataToEncode: DataToEncode = { id: user.id };
+    const dataToEncode: DecodedAuthCookieData = { id: user.id };
     const { accessToken, refreshToken } =
       await this.jwtService.generateTokens(dataToEncode);
 
@@ -65,7 +65,7 @@ export class AuthService {
       });
     }
 
-    const dataToEncode: DataToEncode = { id: user.id };
+    const dataToEncode: DecodedAuthCookieData = { id: user.id };
     const { accessToken, refreshToken } =
       await this.jwtService.generateTokens(dataToEncode);
 

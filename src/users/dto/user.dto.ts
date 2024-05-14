@@ -1,5 +1,3 @@
-import type { ChangableUserProfileProperties } from '../users.interface';
-
 export type CreateUserDto = {
   email: string;
   password: string;
@@ -7,5 +5,8 @@ export type CreateUserDto = {
 };
 
 export type UpdateUserDto = {
-  profile: ChangableUserProfileProperties;
+  id: number;
+  userName?: string;
+  aboutMe?: string | null;
+  avatarPath?: string | null;
 };

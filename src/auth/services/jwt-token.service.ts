@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-
-import type { DataToEncode, DecodedData } from '../auth.interface';
+import { DecodedAuthCookieData } from 'src/app.interface';
 
 @Injectable()
 export class JwtTokenService {
   constructor(private readonly jwtService: JwtService) {}
 
-  public async generateTokens(payload: DataToEncode) {
+  public async generateTokens(payload: DecodedAuthCookieData) {
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: process.env.ACCESS_TOKEN_SECRET,
       expiresIn: '30m',
@@ -20,7 +19,7 @@ export class JwtTokenService {
     return { accessToken, refreshToken };
   }
 
-  public async verifyToken(token: string): Promise<DecodedData> {
+  public async verifyToken(token: string): Promise<DecodedAuthCookieData> {
     return await this.jwtService.verifyAsync(token, {
       secret: process.env.REFRESH_TOKEN_SECRET,
     });

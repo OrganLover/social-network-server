@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Req, Res } from '@nestjs/common';
 import joiBodyValidatorDecorator from 'libs/decorators/joi/joi-body-validator.decorator';
+import { COOKIE } from 'src/app.constant';
 
 import { AuthService } from './auth.service';
 import {
   loginUserSchema,
   registerUserSchema,
 } from './dto/joi-schemas/auth.schema';
-import { COOKIE } from './auth.constant';
 
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { LoginUserDto, RegisterUserDto } from './dto/auth.dto';
