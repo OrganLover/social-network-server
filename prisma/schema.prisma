@@ -11,15 +11,19 @@ datasource db {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
-  email        String       @unique @db.VarChar(255)
-  passwordHash String       @map("password_hash") @db.VarChar(255)
-  profile      UserProfile?
+  id            Int            @id @default(autoincrement())
+  email         String         @unique @db.VarChar(255)
+  passwordHash  String         @map("password_hash") @db.VarChar(255)
+  profile       UserProfile?
+  posts         UserPost[]
+  likedPosts    LikedPost[]
+  dislikedPosts DislikedPost[]
 
   @@map("users")
 }
 
 model UserProfile {
+  id         Int     @id @default(autoincrement())
   userName   String  @map("user_name") @db.VarChar(50)
   aboutMe    String? @map("about_me") @db.VarChar(255)
   avatarPath String? @map("avatar_path")
@@ -27,4 +31,40 @@ model UserProfile {
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+}
+
+model UserPost {
+  id            Int            @id @default(autoincrement())
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  title         String         @db.VarChar(50)
+  content       String         @db.VarChar(1000)
+  likesCount    Int            @default(0) @map("likes_count")
+  dislikesCount Int            @default(0) @map("dislikes_count")
+  authorId      Int            @map("author_id")
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likedBy       LikedPost[]
+  dislikedBy    DislikedPost[]
+
+  @@map("user_posts")
+}
+
+model LikedPost {
+  authorId Int      @unique @map("author_id")
+  user     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId   Int      @unique @map("post_id")
+  post     UserPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([authorId, postId])
+  @@map("liked_posts")
+}
+
+model DislikedPost {
+  authorId Int      @unique @map("author_id")
+  user     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId   Int      @unique @map("post_id")
+  post     UserPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([authorId, postId])
+  @@map("disliked_posts")
 }
