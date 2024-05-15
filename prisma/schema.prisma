@@ -50,9 +50,9 @@ model UserPost {
 }
 
 model LikedPost {
-  userId Int      @unique @map("user_id")
+  userId Int      @map("user_id")
   user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postId Int      @unique @map("post_id")
+  postId Int      @map("post_id")
   post   UserPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@id([userId, postId])
@@ -60,9 +60,9 @@ model LikedPost {
 }
 
 model DislikedPost {
-  userId Int      @unique @map("user_id")
+  userId Int      @map("user_id")
   user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postId Int      @unique @map("post_id")
+  postId Int      @map("post_id")
   post   UserPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@id([userId, postId])
