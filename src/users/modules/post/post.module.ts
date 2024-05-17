@@ -8,4 +8,4 @@ import UserPostController from './post.controller';
   controllers: [UserPostController],
   providers: [UserPostService, PrismaClient],
 })
-export class UsersModule {}
+export class UserPostsModule {}

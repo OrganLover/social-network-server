@@ -3,8 +3,10 @@ import { PrismaClient } from '@prisma/client';
 
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { UserPostsModule } from './modules/post/post.module';
 
 @Module({
+  imports: [UserPostsModule],
   controllers: [UsersController],
   providers: [UsersService, PrismaClient],
 })

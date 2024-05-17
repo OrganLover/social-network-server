@@ -60,6 +60,11 @@ export class UsersController {
     return this.service.update({ ...dto, id });
   }
 
+  @Get()
+  public getMany() {
+    return this.service.getMany();
+  }
+
   @Get(':userId')
   public get(@Param('userId', ParseIntPipe) userId: number) {
     return this.service.get(userId);

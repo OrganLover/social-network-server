@@ -98,6 +98,10 @@ export class UsersService {
     return userData;
   }
 
+  public async getMany(): Promise<User[]> {
+    return await this.db.user.findMany({ include: { profile: true } });
+  }
+
   public async delete(id: number): Promise<User | undefined> {
     const deletedUser = await this.db.user.delete({
       where: {

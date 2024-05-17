@@ -12,8 +12,13 @@ import { joiBodyValidatorDecorator } from 'libs';
 import UserPostService from './post.service';
 import createUserPostSchema from './dto/joi-schemas/create.schema';
 import updateUserPostSchema from './dto/joi-schemas/update.schema';
+import ratePostSchema from './dto/joi-schemas/rate.schema';
 
-import type { CreateUserPostDto, UpdateUserPostDto } from './post.interface';
+import type {
+  CreateUserPostDto,
+  RatePostDto,
+  UpdateUserPostDto,
+} from './post.interface';
 
 @Controller('/user-posts')
 export default class UserPostController {
@@ -24,6 +29,14 @@ export default class UserPostController {
     @joiBodyValidatorDecorator(createUserPostSchema) dto: CreateUserPostDto,
   ) {
     return this.service.create(dto);
+  }
+
+  @Put('rate/:id')
+  public ratePost(
+    @Param('id', ParseIntPipe) id: number,
+    @joiBodyValidatorDecorator(ratePostSchema) dto: Omit<RatePostDto, 'postId'>,
+  ) {
+    return this.service.ratePost({ ...dto, postId: id });
   }
 
   @Put(':authorId')

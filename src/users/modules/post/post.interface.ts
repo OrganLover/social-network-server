@@ -22,3 +22,9 @@ export type UserPost = {
   updatedAt: Date;
   author: User;
 };
+
+export type RatePostDto = {
+  value: 1 | -1;
+  userId: number;
+  postId: number;
+};

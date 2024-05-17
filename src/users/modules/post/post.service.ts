@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 import type {
   CreateUserPostDto,
+  RatePostDto,
   UpdateUserPostDto,
   UserPost,
 } from './post.interface';
@@ -19,7 +20,21 @@ export default class UserPostService {
         author: { connect: { id: dto.authorId } },
       },
       include: {
-        author: true,
+        author: {
+          include: {
+            profile: true,
+          },
+        },
+        likedBy: {
+          select: {
+            userId: true,
+          },
+        },
+        dislikedBy: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
@@ -34,7 +49,21 @@ export default class UserPostService {
         content: dto.content,
       },
       include: {
-        author: true,
+        author: {
+          include: {
+            profile: true,
+          },
+        },
+        likedBy: {
+          select: {
+            userId: true,
+          },
+        },
+        dislikedBy: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
@@ -79,16 +108,244 @@ export default class UserPostService {
     return post;
   }
 
-  public async getMany(authorId: number): Promise<UserPost[]> {
+  public async getMany(authorId: number): Promise<
+    (UserPost & {
+      likedBy: { userId: number }[];
+      dislikedBy: { userId: number }[];
+    })[]
+  > {
     const posts = await this.db.userPost.findMany({
       where: {
         authorId,
       },
       include: {
-        author: true,
+        author: {
+          include: {
+            profile: true,
+          },
+        },
+        likedBy: {
+          select: {
+            userId: true,
+          },
+        },
+        dislikedBy: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
     return posts;
+  }
+
+  public async ratePost(dto: RatePostDto): Promise<UserPost> {
+    const alreadyLiked = await this.db.likedPost.count({
+      where: {
+        userId: dto.userId,
+        postId: dto.postId,
+      },
+    });
+    const alreadyDisliked = await this.db.dislikedPost.count({
+      where: {
+        userId: dto.userId,
+        postId: dto.postId,
+      },
+    });
+
+    if (dto.value === 1) {
+      if (alreadyLiked) {
+        const [, post] = await this.db.$transaction([
+          this.db.likedPost.delete({
+            where: {
+              userId_postId: {
+                userId: dto.userId,
+                postId: dto.postId,
+              },
+            },
+          }),
+
+          this.db.userPost.update({
+            where: {
+              id: dto.postId,
+            },
+            data: {
+              likesCount: {
+                decrement: 1,
+              },
+            },
+            include: {
+              author: {
+                include: {
+                  profile: true,
+                },
+              },
+              likedBy: {
+                select: {
+                  userId: true,
+                },
+              },
+              dislikedBy: {
+                select: {
+                  userId: true,
+                },
+              },
+            },
+          }),
+        ]);
+
+        return post;
+      }
+
+      const [, , post] = await this.db.$transaction([
+        this.db.likedPost.create({
+          data: {
+            user: {
+              connect: { id: dto.userId },
+            },
+            post: {
+              connect: { id: dto.postId },
+            },
+          },
+        }),
+
+        this.db.dislikedPost.deleteMany({
+          where: {
+            userId: dto.userId,
+            postId: dto.postId,
+          },
+        }),
+
+        this.db.userPost.update({
+          where: {
+            id: dto.postId,
+          },
+          data: {
+            likesCount: {
+              increment: 1,
+            },
+            dislikesCount: {
+              decrement: alreadyDisliked ? 1 : 0,
+            },
+          },
+          include: {
+            author: {
+              include: {
+                profile: true,
+              },
+            },
+            likedBy: {
+              select: {
+                userId: true,
+              },
+            },
+            dislikedBy: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+      return post;
+    }
+
+    if (alreadyDisliked) {
+      const [, post] = await this.db.$transaction([
+        this.db.dislikedPost.delete({
+          where: {
+            userId_postId: {
+              userId: dto.userId,
+              postId: dto.postId,
+            },
+          },
+        }),
+
+        this.db.userPost.update({
+          where: {
+            id: dto.postId,
+          },
+          data: {
+            dislikesCount: {
+              decrement: 1,
+            },
+          },
+          include: {
+            author: {
+              include: {
+                profile: true,
+              },
+            },
+            likedBy: {
+              select: {
+                userId: true,
+              },
+            },
+            dislikedBy: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+      return post;
+    }
+
+    const [, , post] = await this.db.$transaction([
+      this.db.dislikedPost.create({
+        data: {
+          user: {
+            connect: { id: dto.userId },
+          },
+          post: {
+            connect: { id: dto.postId },
+          },
+        },
+      }),
+
+      this.db.likedPost.deleteMany({
+        where: {
+          userId: dto.userId,
+          postId: dto.postId,
+        },
+      }),
+
+      this.db.userPost.update({
+        where: {
+          id: dto.postId,
+        },
+        data: {
+          dislikesCount: {
+            increment: 1,
+          },
+          likesCount: {
+            decrement: alreadyLiked ? 1 : 0,
+          },
+        },
+        include: {
+          author: {
+            include: {
+              profile: true,
+            },
+          },
+          likedBy: {
+            select: {
+              userId: true,
+            },
+          },
+          dislikedBy: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return post;
   }
 }
