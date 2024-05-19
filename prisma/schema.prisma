@@ -11,13 +11,17 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique @db.VarChar(255)
-  passwordHash  String         @map("password_hash") @db.VarChar(255)
-  profile       UserProfile?
-  posts         UserPost[]
-  likedPosts    LikedPost[]
-  dislikedPosts DislikedPost[]
+  id                Int            @id @default(autoincrement())
+  email             String         @unique @db.VarChar(255)
+  passwordHash      String         @map("password_hash") @db.VarChar(255)
+  profile           UserProfile?
+  posts             UserPost[]
+  likedPosts        LikedPost[]
+  dislikedPosts     DislikedPost[]
+  initiatorDialogs  Dialog[]       @relation("initiator")
+  respondentDialogs Dialog[]       @relation("respondent")
+  writerMessages    Message[]      @relation("writer")
+  readerMessages    Message[]      @relation("reader")
 
   @@map("users")
 }
@@ -67,4 +71,31 @@ model DislikedPost {
 
   @@id([userId, postId])
   @@map("disliked_posts")
+}
+
+model Dialog {
+  id           Int       @id @default(autoincrement())
+  initiatorId  Int       @map("initiator_id")
+  initiator    User      @relation(fields: [initiatorId], references: [id], onDelete: NoAction, name: "initiator")
+  respondentId Int       @map("user_id")
+  respondent   User      @relation(fields: [respondentId], references: [id], onDelete: NoAction, name: "respondent")
+  messages     Message[]
+
+  @@unique([initiatorId, respondentId])
+  @@map("dialogs")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  dialogId  Int      @map("dialog_id")
+  dialog    Dialog   @relation(fields: [dialogId], references: [id], onDelete: Cascade)
+  writerId  Int      @map("writer_id")
+  writer    User     @relation(fields: [writerId], references: [id], onDelete: NoAction, name: "writer")
+  readerId  Int      @map("reader_id")
+  reader    User     @relation(fields: [readerId], references: [id], onDelete: NoAction, name: "reader")
+
+  @@map("messages")
 }
