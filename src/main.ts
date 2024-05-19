@@ -29,7 +29,7 @@ async function bootstrap() {
   app.setGlobalPrefix('/api');
   app.enableCors({
     credentials: true,
-    origin: 'http://localhost:5173',
+    origin: process.env.ORIGIN,
   });
 
   await app.listen(3000);
