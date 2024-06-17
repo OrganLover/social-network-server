@@ -14,10 +14,10 @@ import type { Server, Socket } from 'socket.io';
 import type { CreateMessageDto, UpdateMessageDto } from './dto/dialog.dto';
 
 @WebSocketGateway(Number.parseInt(process.env.DIALOGS_GATEWAY_PORT ?? '4444'), {
-  namespace: 'dialogs',
+  namespace: 'dialogs-server',
   transports: ['websocket'],
   cors: {
-    origin: process.env.ORIGIN,
+    origin: process.env.ORIGIN?.split(', '),
   },
 })
 export default class DialogsGateway {
